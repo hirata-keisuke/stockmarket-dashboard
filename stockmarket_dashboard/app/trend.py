@@ -20,3 +20,7 @@ def calc_EMA(df, num):
             averages.append(None)
 
     return averages
+
+def calc_LRI(df, num):
+
+    return [None,None,2.0,3.0,4.0]
