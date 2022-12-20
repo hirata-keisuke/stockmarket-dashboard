@@ -1,3 +1,5 @@
+from sklearn.linear_model import LinearRegression
+
 def calc_SMA(df, num):
     averages = []
     for i in range(len(df)):
@@ -23,4 +25,15 @@ def calc_EMA(df, num):
 
 def calc_LRI(df, num):
 
-    return [None,None,2.0,3.0,4.0]
+    averages = []
+    for i in range(len(df)):
+        if i >= num-1:
+            model = LinearRegression()
+            X = [[i] for i in range(num)]
+            y = df.loc[i-num+1:i,"終値"].to_list()
+            model.fit(X,y)
+            averages.append(model.predict([X[-1]])[0])
+        else:
+            averages.append(None)
+
+    return averages

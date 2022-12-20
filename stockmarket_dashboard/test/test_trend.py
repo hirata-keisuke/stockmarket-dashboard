@@ -28,7 +28,11 @@ class TestSMA(TestCase):
         nums = [i for i in range(5)]
         df = pd.DataFrame(data={"終値":nums})
 
+        answer = [None,None,2.0,3.0,4.0]
+        averages = calc_LRI(df, 3)
+        pred = [
+            True if answer[i] is None or abs(averages[i]-answer[i])<1e-5 else False for i in range(5)
+        ]
         self.assertEqual(
-            [None,None,2.0,3.0,4.0],
-            calc_LRI(df, 3)
+            [True for _ in range(5)], pred
         )
