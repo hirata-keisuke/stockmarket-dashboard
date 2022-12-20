@@ -1,0 +1,10 @@
+{
+    "name": "python-devcontainer",
+    "forwardPorts": [],
+    "features": {},
+    "extensions": [
+        "ms-python.python"
+    ],
+    "dockerFile": "./Dockerfile",
+    "settings": {}
+}
