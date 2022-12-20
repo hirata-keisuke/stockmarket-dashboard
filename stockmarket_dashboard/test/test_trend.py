@@ -9,8 +9,8 @@ class TestSMA(TestCase):
         df = pd.DataFrame(data={"終値":nums})
 
         self.assertEqual(
-            [None,None,None,None,2.0],
-            calc_SMA(df, 5)
+            [None,None,1.0,2.0,3.0],
+            calc_SMA(df, 3)
         )
         
     def test_exponental_moving_average(self):
