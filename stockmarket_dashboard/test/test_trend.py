@@ -8,5 +8,8 @@ class TestSMA(TestCase):
         nums = [i for i in range(5)]
         df = pd.DataFrame(data={"終値":nums})
 
-        self.assertEqual(calc_SMA(df,5)[-1], sum(nums)/len(nums))
-
+        self.assertEqual(
+            [None,None,None,None,2],
+            calc_SMA(df, 5)
+        )
+        
