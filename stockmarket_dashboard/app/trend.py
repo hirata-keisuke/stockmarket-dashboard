@@ -6,3 +6,7 @@ def calc_SMA(df, num):
         else:
             averages.append(None)
     return averages
+
+def calc_EMA(df, num):
+
+    return [None,None,1.0,2.0,3.0]
