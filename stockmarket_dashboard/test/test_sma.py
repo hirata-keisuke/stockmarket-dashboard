@@ -1,6 +1,6 @@
 import pandas as pd
 from unittest import TestCase
-from app.sma import calc_SMA
+from app.trend import calc_SMA
 
 class TestSMA(TestCase):
     def test_simply_moving_average(self):

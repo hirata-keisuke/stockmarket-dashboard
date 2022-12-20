@@ -1,9 +1,9 @@
-from dash import Dash, dcc, html, Input, Output, State
+from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objects as go
 import pandas as pd
 import base64
 import io
-from sma import calc_SMA
+from trend import calc_SMA
 
 app = Dash(__name__)
 
