@@ -1,5 +1,19 @@
 from sklearn.linear_model import LinearRegression
 
+trend_calculators = {}
+
+def trend_calculator(name):
+
+    def _trend_calculator(calc_fn):
+        trend_calculators[name] = calc_fn
+        return calc_fn
+    
+    return _trend_calculator
+
+def select_calculator(name):
+    return trend_calculators[name]
+
+@trend_calculator("simple")
 def calc_SMA(df, num):
     averages = []
     for i in range(len(df)):
@@ -9,6 +23,7 @@ def calc_SMA(df, num):
             averages.append(None)
     return averages
 
+@trend_calculator("exponential")
 def calc_EMA(df, num):
 
     averages = []
@@ -23,6 +38,7 @@ def calc_EMA(df, num):
 
     return averages
 
+@trend_calculator("regression")
 def calc_LRI(df, num):
 
     averages = []
