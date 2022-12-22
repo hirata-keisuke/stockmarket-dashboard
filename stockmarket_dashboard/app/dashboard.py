@@ -60,7 +60,9 @@ def display_candlestick(content):
 
 
 def set_trend_method(df, fig):
-    for value, color in zip([5, 20, 60], ["lightgoldenrodyellow", "lightcoral", "lightskyblue"]):
+    for value, color in zip(
+        [5, 20, 60], ["lightgoldenrodyellow", "lightcoral", "lightskyblue"]
+    ):
         fig.add_trace(go.Scatter(
                 x=df["Date"], y=select_calculator("simple")(df, value),
                 name=f"{value}日単純移動平均線", marker={"color":color}
