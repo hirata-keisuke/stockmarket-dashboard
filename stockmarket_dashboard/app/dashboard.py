@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 import pandas as pd
 import base64
@@ -30,16 +30,15 @@ app.layout = html.Div([
     dcc.Graph(id="graph"),
 ])
 
-@app.callback(
-    Output("graph", "figure"), 
-    Input("upload-data", "contents"),
+@app.callback(Output('graph', 'figure'),
+              Input('upload-data', 'contents')
 )
-def display_candlestick(contents):
-    fig = None
-    if contents is not None:
-        _, content_string = contents.split(',')
-
+def display_candlestick(content):
+    
+    if content:
+        _, content_string = content.split(',')
         decoded = base64.b64decode(content_string)
+
         df = pd.read_csv(
             io.StringIO(decoded.decode('utf-8')),
             parse_dates=True, usecols=[0,1,2,3,4,6]
@@ -53,16 +52,18 @@ def display_candlestick(contents):
             name="ローソク足"
         ))
         fig = go.Figure(candlestick)
+    else:
+        fig = go.Figure()
 
-        for value in [5, 20, 60]:
-            df["calc_sma"] = calc_SMA(df, value)
-            line = go.Scatter(
-                x=df["Date"], y=df["calc_sma"],
-                name=f"{value}日移動平均線",
-                mode="lines",
-                marker=dict(color="#a0a0a0")
-            )
-            fig.add_traces(line)
+    """ for value in [5, 20, 60]:
+        df["calc_sma"] = calc_SMA(df, value)
+        line = go.Scatter(
+            x=df["Date"], y=df["calc_sma"],
+            name=f"{value}日移動平均線",
+            mode="lines",
+            marker=dict(color="#a0a0a0")
+        )
+        fig.add_traces(line) """
 
     return fig
 
