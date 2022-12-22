@@ -1,9 +1,9 @@
-from dash import Dash, dcc, html, Input, Output, State
+from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objects as go
 import pandas as pd
 import base64
 import io
-from trend import calc_SMA
+from trend import select_calculator
 
 app = Dash(__name__)
 
@@ -34,7 +34,8 @@ app.layout = html.Div([
               Input('upload-data', 'contents')
 )
 def display_candlestick(content):
-    
+
+    fig = go.Figure()
     if content:
         _, content_string = content.split(',')
         decoded = base64.b64decode(content_string)
@@ -43,7 +44,7 @@ def display_candlestick(content):
             io.StringIO(decoded.decode('utf-8')),
             parse_dates=True, usecols=[0,1,2,3,4,6]
         )
-        candlestick = go.Figure(go.Candlestick(
+        fig = go.Figure(go.Candlestick(
             x=df['Date'],
             open=df['始値'],
             high=df['高値'],
@@ -51,20 +52,60 @@ def display_candlestick(content):
             close=df['終値'],
             name="ローソク足"
         ))
-        fig = go.Figure(candlestick)
-    else:
-        fig = go.Figure()
+        fig.update_layout(xaxis_rangeslider_visible=False)
 
-    """ for value in [5, 20, 60]:
-        df["calc_sma"] = calc_SMA(df, value)
-        line = go.Scatter(
-            x=df["Date"], y=df["calc_sma"],
-            name=f"{value}日移動平均線",
-            mode="lines",
-            marker=dict(color="#a0a0a0")
-        )
-        fig.add_traces(line) """
+        fig = set_trend_method(df, fig)
 
     return fig
+
+
+def set_trend_method(df, fig):
+    for value, color in zip([5, 20, 60], ["lightgoldenrodyellow", "lightcoral", "lightskyblue"]):
+        fig.add_trace(go.Scatter(
+                x=df["Date"], y=select_calculator("simple")(df, value),
+                name=f"{value}日単純移動平均線", marker={"color":color}
+        ))
+
+    fig.add_trace(go.Scatter(
+            x=df["Date"], y=select_calculator("exponential")(df, 10),
+            name="指数平滑移動平均線", marker={"color":"lightgray"}
+    ))
+
+    fig.add_trace(go.Scatter(
+            x=df["Date"], y=select_calculator("regression")(df, 10),
+            name="線形回帰値線", marker={"color":"lightpink"}
+    ))
+
+    def button_params(name):
+        visible = [True]
+        for data in fig["data"][1:]:
+            if name in data["name"] or name=="全て":
+                visible.append(True)
+            else:
+                visible.append(False)
+
+        return {
+            "label":name,
+            "method":"update",
+            "args":[{
+                'visible': visible,
+                'title': name,
+                'showlegend': True
+            }]
+        }
+
+    fig.update_layout(
+        updatemenus=[go.layout.Updatemenu(
+            active=0,
+            buttons=[
+                button_params("全て"),
+                button_params("単純移動平均線"),
+                button_params("指数平滑移動平均線"),
+                button_params("線形回帰値線")
+            ]
+        )]
+    )
+    return fig
+    
 
 app.run_server(debug=True)
