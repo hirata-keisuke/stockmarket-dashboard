@@ -1,4 +1,5 @@
 from sklearn.linear_model import LinearRegression
+import plotly.graph_objects as go
 
 trend_calculators = {} # トレンド分析を計算する関数を格納する辞書
 
@@ -103,3 +104,57 @@ def calc_LRI(df, num):
             averages.append(None)
 
     return averages
+
+def trend_direction(df, fig):
+    """トレンドの方向を示すグラフとロウソク足を描画する
+    
+    """
+    
+    for value, color in zip(
+        [5, 20, 60], ["lightgoldenrodyellow", "lightcoral", "lightskyblue"]
+    ):
+        fig.add_trace(go.Scatter(
+                x=df["Date"], y=select_calculator("simple")(df, value),
+                name=f"{value}日単純移動平均線", marker={"color":color}
+        ))
+
+    fig.add_trace(go.Scatter(
+            x=df["Date"], y=select_calculator("exponential")(df, 10),
+            name="指数平滑移動平均線", marker={"color":"lightgray"}
+    ))
+
+    fig.add_trace(go.Scatter(
+            x=df["Date"], y=select_calculator("regression")(df, 10),
+            name="線形回帰値線", marker={"color":"lightpink"}
+    ))
+
+    def button_params(name):
+        visible = [True]
+        for data in fig["data"][1:]:
+            if name in data["name"] or name=="全て":
+                visible.append(True)
+            else:
+                visible.append(False)
+
+        return {
+            "label":name,
+            "method":"update",
+            "args":[{
+                'visible': visible,
+                'title': name,
+                'showlegend': True
+            }]
+        }
+
+    fig.update_layout(
+        updatemenus=[go.layout.Updatemenu(
+            active=0,
+            buttons=[
+                button_params("全て"),
+                button_params("単純移動平均線"),
+                button_params("指数平滑移動平均線"),
+                button_params("線形回帰値線")
+            ]
+        )]
+    )
+    return fig

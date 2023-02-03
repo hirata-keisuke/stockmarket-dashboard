@@ -1,1 +1,2 @@
-./stockmarket_dashboard/data/*
+/stockmarket_dashboard/data/*
+/stockmarket_dashboard/downloaded*

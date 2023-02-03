@@ -1,6 +1,6 @@
 import pandas as pd
 from unittest import TestCase
-from app.trend import select_calculator
+from stockmarket_dashboard.app.trend_direction import select_calculator
 
 class TestSMA(TestCase):
     def test_simply_moving_average(self):

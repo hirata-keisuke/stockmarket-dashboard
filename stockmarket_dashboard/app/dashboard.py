@@ -1,56 +1,81 @@
 from dash import Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 import pandas as pd
-import base64
-import io
+import os
+import glob
 import yfinance
 from datetime import date
-from trend import select_calculator
+from trend_direction import trend_direction
+from trend_strength import trend_strength
 from input import download_stock_codes, drop_down_options
 
 app = Dash(__name__)
 
 app.layout = html.Div([
-    html.H4('ロウソク足'),
-    html.Div(
-        [
-            html.Div(dcc.Dropdown(
-                id='stock_name', options=drop_down_options,
-                multi=False, placeholder='銘柄'
-            ), style={"width": "50%", "margin-right": 10, "display": "inline-block"}),
-            html.Div([
-                dcc.Input(id="start-date", type="text", placeholder="yyyy/mm/dd"),
-                "〜",
-                dcc.Input(id="end-date", type="text", placeholder="yyyy/mm/dd")
-            ], style={"width": "30%", "margin-right": 10, "display": "inline-block"}),
-            html.Button('Go', id='submit-btn', n_clicks=0),
-        ],
-    ),
-    dcc.Graph(id="graph"),
+    html.H1("テクニカル分析ツール"),
+    html.Div([
+        html.H3("銘柄選択"),
+        html.Div(dcc.Dropdown(
+            id='stock_name', options=drop_down_options,
+            multi=False, placeholder='銘柄'
+        ), style={"width": "50%", "margin-right": 10}),
+        html.H3("期間指定"),
+        html.Div([
+            dcc.Input(
+                id="start-date", type="text", placeholder="yyyy/mm/dd",
+                style={"font-size": "100%", "margin-right": "10px"}
+            ),
+            "〜",
+            dcc.Input(
+                id="end-date", type="text", placeholder="yyyy/mm/dd",
+                style={"font-size": "100%", "margin": "10px"}
+            ),
+            html.Button('計算する', id='submit-btn', n_clicks=0, style={"font-size": "100%"})
+        ], style={"display": "inline-block", }),
+    ]),
+    dcc.Tabs([
+        dcc.Tab(label="トレンド方向", children=[
+            dcc.Graph(id="trend-direction"),
+        ]),
+        dcc.Tab(label="トレンド強度", children=[
+            dcc.Graph(id="trend-strength")
+        ])
+    ]),
     html.Div([html.Button("銘柄一覧更新", id="btn_stock_code", n_clicks=0)]),
     html.P(id="hidden-div", style={"display":"none"}),
 ])
 
 @app.callback(
-    Output('graph', 'figure'),
+    Output("trend-direction", "figure"),
+    Output("trend-strength", "figure"),
     Input("submit-btn", "n_clicks"),
     State("stock_name", "value"),
     State("start-date", "value"), 
     State("end-date", "value")
 )
-def display_candlestick(n_clicks, code, start_date, end_date):
+def technical_analysis(n_clicks, code, start_date, end_date):
 
-    fig = go.Figure()
+    direction = go.Figure()
+    strength = go.Figure()
 
     if n_clicks:
         start_date = start_date.split("/")
         start_date = date(int(start_date[0]), int(start_date[1]), int(start_date[2]))
         end_date = end_date.split("/")
         end_date = date(int(end_date[0]), int(end_date[1]), int(end_date[2]))
-        df = yfinance.download(code, start_date, end_date)
-        df.columns = ["始値", "高値", "安値", "終値", "調整後終値", "売買高"]
-        df = df.reset_index()
-        fig = go.Figure(go.Candlestick(
+        filepath = "downloaded"+code+start_date.strftime("%Y%m%d")+end_date.strftime("%Y%m%d")+".csv"
+
+        if os.path.isfile(filepath):
+            df = pd.read_csv(filepath, encoding="utf-8")
+        else:
+            for f in glob.glob("downloaded*.csv"):
+                os.remove(f)
+            df = yfinance.download(code, start_date, end_date)
+            df.columns = ["始値", "高値", "安値", "終値", "調整後終値", "売買高"]
+            df = df.reset_index()
+            df.to_csv(filepath, index=False, encoding="utf-8")
+
+        direction = go.Figure(go.Candlestick(
             x=df["Date"],
             open=df['始値'],
             high=df['高値'],
@@ -58,62 +83,12 @@ def display_candlestick(n_clicks, code, start_date, end_date):
             close=df['終値'],
             name="ローソク足"
         ))
-        fig.update_layout(xaxis_rangeslider_visible=False)
+        direction.update_layout(xaxis_rangeslider_visible=False)
+        direction = trend_direction(df, direction)
 
-        fig = set_trend_method(df, fig)
+        strength = trend_strength(df, strength)
 
-    return fig
-
-
-def set_trend_method(df, fig):
-    for value, color in zip(
-        [5, 20, 60], ["lightgoldenrodyellow", "lightcoral", "lightskyblue"]
-    ):
-        fig.add_trace(go.Scatter(
-                x=df["Date"], y=select_calculator("simple")(df, value),
-                name=f"{value}日単純移動平均線", marker={"color":color}
-        ))
-
-    fig.add_trace(go.Scatter(
-            x=df["Date"], y=select_calculator("exponential")(df, 10),
-            name="指数平滑移動平均線", marker={"color":"lightgray"}
-    ))
-
-    fig.add_trace(go.Scatter(
-            x=df["Date"], y=select_calculator("regression")(df, 10),
-            name="線形回帰値線", marker={"color":"lightpink"}
-    ))
-
-    def button_params(name):
-        visible = [True]
-        for data in fig["data"][1:]:
-            if name in data["name"] or name=="全て":
-                visible.append(True)
-            else:
-                visible.append(False)
-
-        return {
-            "label":name,
-            "method":"update",
-            "args":[{
-                'visible': visible,
-                'title': name,
-                'showlegend': True
-            }]
-        }
-
-    fig.update_layout(
-        updatemenus=[go.layout.Updatemenu(
-            active=0,
-            buttons=[
-                button_params("全て"),
-                button_params("単純移動平均線"),
-                button_params("指数平滑移動平均線"),
-                button_params("線形回帰値線")
-            ]
-        )]
-    )
-    return fig
+    return direction, strength
 
 @app.callback(
     Output('hidden-div', 'children'),
