@@ -1,6 +1,10 @@
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
+
 import pandas as pd
+import unittest
 from unittest import TestCase
-from stockmarket_dashboard.app.trend_direction import select_calculator
+from trend_direction import select_calculator
 
 class TestSMA(TestCase):
     def test_simply_moving_average(self):
@@ -39,3 +43,6 @@ class TestSMA(TestCase):
         self.assertEqual(
             [True for _ in range(5)], pred
         )
+
+if __name__ == "__main__":
+    unittest.main()
