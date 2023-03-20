@@ -2,9 +2,13 @@
     "name": "python-devcontainer",
     "forwardPorts": [],
     "features": {},
-    "extensions": [
-        "ms-python.python"
-    ],
     "dockerFile": "./Dockerfile",
-    "settings": {}
+    "customizations":{
+        "vscode": {
+            "extensions": [
+                "ms-python.python"
+            ],
+            "settings": {}
+        }
+    }
 }
