@@ -29,18 +29,22 @@ def stock_filter(st, price_upper, price_lower, volume_upper, volume_lower):
 def _prepare_codes():
     """日本株と米国株のコードをCSVファイルに用意する
     """
+    code_path = os.path.isfile(os.path.join(__file__), os.pardir, "data", "codes.csv")
+    if code_path:
+        os.remove(code_path)
+
     # 日本取引所より日本株
     response = requests.get(
         "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
     )
     # 一度保存して
-    with open("data/jpx.xlsx", "wb") as fp:
+    with open("_jpx.xlsx", "wb") as fp:
         fp.write(response.content)
     jpx = pd.read_excel("data/jpx.xlsx")
     jpx["コード"] = jpx["コード"].apply(lambda x: str(x)+".T")
-    os.remove("data/jpx.xlsx")
+    os.remove("_jpx.xlsx")
     jpx.to_csv(
-        "data/codes.csv",
+        code_path,
         columns=["コード", "銘柄名"],
         index=False, mode="w"
     )
@@ -56,7 +60,7 @@ def _prepare_codes():
         sbi = pd.read_html(fp)[0]
         sbi.columns = ["コード", "銘柄名", "事業内容", "市場"]
     sbi.to_csv(
-        "data/codes.csv",
+        code_path,
         columns=["コード", "銘柄名"],
         index=False, mode="a+"
     )
