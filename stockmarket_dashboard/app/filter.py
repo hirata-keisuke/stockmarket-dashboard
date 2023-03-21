@@ -1,26 +1,34 @@
 import pandas as pd
-import yfinance
 import requests
 import io
 import re
 import os
-import unicodedata
-
-from datetime import datetime as dt
 from bs4 import BeautifulSoup
 
-if os.path.isfile("data/codes.csv"):
-    df = pd.read_csv("data/codes.csv")
-    df = df.sort_values("銘柄名")
-    drop_down_options = [
-        {"label":unicodedata.normalize("NFKC", row["銘柄名"]), "value":row["コード"]}
-        for _, row in df.iterrows()
-    ]
-else:
-    drop_down_options = [{"label":"", "value":""}]
+def stock_filter(st, price_upper, price_lower, volume_upper, volume_lower):
+    """株価や出来高が指定範囲内かを調べる
+
+    args:
+        st (pandas.DataFrame):株式情報
+        price_upper (float):株価の上限
+        price_lower (float):株価の下限
+        volume_upper (float):出来高の上限
+        volume_lower (float):出来高の下限
+    
+    return:
+        pandas.DataFrame or None
+    """
+    _mean = st.mean()
+    if _mean["Close"] < price_lower or price_upper < _mean["Close"]:
+        return None
+    if _mean["Volume"] < volume_lower or volume_upper < _mean["Volume"]:
+        return None
+    return st
 
 
-def download_stock_codes():
+def _prepare_codes():
+    """日本株と米国株のコードをCSVファイルに用意する
+    """
     # 日本取引所より日本株
     response = requests.get(
         "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
@@ -30,6 +38,7 @@ def download_stock_codes():
         fp.write(response.content)
     jpx = pd.read_excel("data/jpx.xlsx")
     jpx["コード"] = jpx["コード"].apply(lambda x: str(x)+".T")
+    os.remove("data/jpx.xlsx")
     jpx.to_csv(
         "data/codes.csv",
         columns=["コード", "銘柄名"],

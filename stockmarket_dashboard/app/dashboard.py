@@ -7,7 +7,7 @@ import yfinance
 from datetime import date
 from trend_direction import trend_direction
 from trend_strength import trend_strength
-from input import download_stock_codes, drop_down_options
+from stockmarket_dashboard.app.filter import download_stock_codes, drop_down_options
 
 app = Dash(__name__)
 
