@@ -15,7 +15,7 @@ def stock_filter(st, price_upper, price_lower, volume_upper, volume_lower):
         volume_upper (float):出来高の上限
         volume_lower (float):出来高の下限
     
-    return:
+    returns:
         pandas.DataFrame or None
     """
     _mean = st.mean()
