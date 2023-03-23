@@ -32,14 +32,23 @@ app.layout = html.Div([
         ], style={"text-align":"center"})
     ], className="search-area"),
     html.Div([
-        html.P("AAAAAAAAAAA", id="candle")
+        html.Div([
+            html.H5("移動平均線"),
+            dcc.Graph(id="candle-sma"),
+            html.Div(["短期:",dcc.Input(id="sma-short", value=5, style={"width":"40px"})]),
+            html.Div(["中期:",dcc.Input(id="sma-midium", value=20, style={"width":"40px"})]),
+            html.Div(["長期:",dcc.Input(id="sma-long", value=60, style={"width":"40px"})]),
+        ], style={"width":"33%"}),html.Div([
+            html.H5("ボリンジャーバンド"),
+            dcc.Graph(id="candle-bollinger"),
+            html.Div(["標準偏差の計算範囲:",dcc.Input(id="bollinger-range", value=20, style={"width":"20px"})])
+        ], style={"width":"33%"}),
+        html.Div([
+            html.H5("DMI"),
+            dcc.Graph(id="candle-dmi"),
+            html.Div(["DMIの計算範囲:",dcc.Input(id="dmi-range", value=10, style={"width":"20px"})])
+        ], style={"width":"33%"}),
     ], className="technicals")
 ])
 
 app.run_server(debug=True)
-
-@app.callback(
-
-)
-def query_stocks():
-    ...
