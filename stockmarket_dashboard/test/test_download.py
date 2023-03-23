@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
-from download import download_stock
+from callback.download import download_stock
 
 import unittest
 from unittest import TestCase

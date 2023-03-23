@@ -1,6 +1,6 @@
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
-from filter import stock_filter
+from callback.filter import stock_filter
 
 import unittest
 import pandas as pd

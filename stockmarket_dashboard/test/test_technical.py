@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
 import yfinance
 import unittest
 from unittest import TestCase
-from technicals import calc_sma, calc_sigma, calc_dmi
+from callback.technicals import calc_sma, calc_sigma, calc_dmi
 
 class TestTechnicals(TestCase):
 
