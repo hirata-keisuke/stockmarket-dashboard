@@ -1,0 +1,38 @@
+.header {
+    float: left;
+    display: flex;
+    flex-direction: row;
+    width: 70%;
+    height: 10%;
+}
+
+.header-item {
+    height: fit-content;
+    width: fit-content;
+    padding: 1px 3px;
+    margin: 1%;
+    background-color: #d7eeff;
+    font-size: 25px;
+}
+
+.search-area {
+    float: right;
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+}
+
+.button-query-submit {
+    margin: 20px;
+    width: 120px; 
+    height: 40px;
+    font-size: 15px;
+}
+
+.technicals {
+    float: left;
+    display: flex;
+    flex-direction: row;
+    width: 70%;
+    height: 50%;
+}
