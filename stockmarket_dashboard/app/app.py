@@ -1,5 +1,7 @@
-from dash import Dash, dcc, html, Input, Output, State
+import pandas as pd
 import plotly.graph_objects as go
+from dash import Dash, dcc, html, Input, Output, State
+from callback.set_codes import set_codes
 
 app = Dash(__name__)
 app.title = "株価テクニカル分析ダッシュボード"
@@ -15,20 +17,20 @@ app.layout = html.Div([
         dcc.DatePickerRange(display_format="Y/M/D", id="period"),
         html.H5("株価範囲"),
         html.Div([
-            dcc.Input(placeholder="株価下限値", type="number", min=0),
+            dcc.Input(placeholder="株価下限値", type="number", min=0, id="stock-price-lower-input"),
             " ~ ",
-            dcc.Input(placeholder="株価上限値", type="number")
+            dcc.Input(placeholder="株価上限値", type="number", id="stock-price-upper-input")
         ]),
         html.H5("出来高範囲"),
         html.Div([
-            dcc.Input(placeholder="出来高下限値", type="number", min=0),
+            dcc.Input(placeholder="出来高下限値", type="number", min=0, id="stock-volume-lower-input"),
             " ~ ",
-            dcc.Input(placeholder="出来高上限値", type="number")
+            dcc.Input(placeholder="出来高上限値", type="number", id="stock-volume-upper-inpur")
         ]),
         html.H5("証券コード"),
-        dcc.Input(placeholder="任意", style={"width":"100px"}),
+        dcc.Dropdown(options=[], id="stock-code-dropdown", style={"width":"200px"}),
         html.Div([
-            html.Button("クエリを送信", id="query-submit", className="button-query-submit")
+            html.Button("クエリを送信", id="query-submit-button", className="query-submit-button")
         ], style={"text-align":"center"})
     ], className="search-area"),
     html.Div([
@@ -52,3 +54,14 @@ app.layout = html.Div([
 ])
 
 app.run_server(debug=True)
+
+@app.callback(
+    Output("stock-code-dropdown", "options")
+)
+def set_codes():
+    """ドロップダウンにコードを表示する
+    """
+    codes = pd.read_csv("../../data/codes.csv")
+    return [
+        {"label":code["銘柄名"], "value":code["コード"]} for _, code in codes.iterrows()
+    ]
