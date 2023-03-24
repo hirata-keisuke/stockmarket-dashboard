@@ -18,13 +18,17 @@ def download_stock(code, start, end):
         pandas.DataFrame or None
     """
 
-    st = None
     try:
-        st = yfinance(code, start=start, end=end)
-        st.code = code
+        st = yfinance.download(code, start=start, end=end)
+        with open("../data/codes.csv", "r") as f:
+            for line in f.readlines():
+                line = line.split(",")
+                if line[0] == code:
+                    st.name = line[1]
+                    break
+        return st
     except:
-        st = None
-    return st
+        return None
 
 def save_stock(st):
     """株式情報を保存する

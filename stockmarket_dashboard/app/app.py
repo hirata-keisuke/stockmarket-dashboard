@@ -2,6 +2,9 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, State
 
+from callback.download import download_stock
+from callback.technicals import calc_sma, calc_sigma, calc_dmi
+
 def set_codes():
     """ドロップダウンにコードを表示する
     """
@@ -15,9 +18,9 @@ app.title = "株価テクニカル分析ダッシュボード"
 
 app.layout = html.Div([
     html.Div([
-        html.P(children="", id="stock-name", className="header-item"),
-        html.P(children="", id="stock-price", className="header-item" ),
-        html.P(children="", id="stock-volume", className="header-item"),
+        html.P(children="銘柄名", id="stock-name", className="header-item"),
+        html.P(children="株価", id="stock-price", className="header-item" ),
+        html.P(children="出来高", id="stock-volume", className="header-item"),
     ], className="header"),
     html.Div([
         html.H5("取得期間"),
@@ -37,7 +40,7 @@ app.layout = html.Div([
         html.H5("証券コード"),
         dcc.Dropdown(options=set_codes(), id="stock-code-dropdown", className="stock-code-dropdown"),
         html.Div([
-            html.Button("クエリを送信", id="query-submit-button", className="query-submit-button")
+            html.Button("クエリを送信", id="query-submit-button", className="query-submit-button", n_clicks=0)
         ], style={"text-align":"center"})
     ], className="search-area"),
     html.Div([
@@ -60,4 +63,42 @@ app.layout = html.Div([
     ], className="technicals")
 ])
 
-app.run_server(debug=True)
+@app.callback(
+    output=[
+        Output("stock-name", "children"), Output("stock-price", "children"), 
+        Output("stock-volume", "children"),
+        Output("candle-sma", "figure"), Output("candle-bollinger", "figure"),
+        Output("candle-dmi", "figure"),
+    ],
+    inputs=[Input("query-submit-button", "n_clicks")],
+    state=[
+        State("period", "start_date"), State("period", "end_date"),
+        State("stock-code-dropdown", "value")
+    ]
+)
+def visualize_technicals(n_clicks, start_date, end_date, code):
+    """選択された証券コード・期間でテクニカルを表示する
+    """
+    if n_clicks == 0:
+        return "銘柄名", "株価", "出来高", go.Figure(), go.Figure(), go.Figure()
+    
+    st = download_stock(code, start_date, end_date)
+
+    if st is None:
+        return None, None, None, go.Figure(), go.Figure(), go.Figure()
+    
+    candle_sma = go.Figure(go.Candlestick(
+        x=st.index, open=st["Open"], high=st["High"], low=st["Low"], close=st["Close"]
+    ))
+    candle_bollinger = go.Figure(go.Candlestick(
+        x=st.index, open=st["Open"], high=st["High"], low=st["Low"], close=st["Close"]
+    ))
+    candle_dmi = go.Figure(go.Candlestick(
+        x=st.index, open=st["Open"], high=st["High"], low=st["Low"], close=st["Close"]
+    ))
+
+    _recent = st.loc[st.index[-1]]
+    return st.name, f'{_recent["Close"]:.1f}円', f'{_recent["Volume"]:.0f}株', candle_sma, candle_bollinger, candle_dmi
+
+if __name__ == "__main__":
+    app.run_server(debug=True)
