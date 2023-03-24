@@ -27,7 +27,7 @@ def calc_sigma(st, n):
         
     """
 
-    return st["Close"].rolling(window=n).std(ddof=0).to_numpy()
+    return st["Close"].rolling(window=n).std().to_numpy()
 
 def calc_dmi(st, n):
     """DMIを計算する

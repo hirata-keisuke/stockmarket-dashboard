@@ -24,7 +24,7 @@ class TestTechnicals(TestCase):
         """
 
         sigma = calc_sigma(self.st, n=10)
-        self.assertEqual(sigma[-1], 62.9166313465684)
+        self.assertEqual(sigma[-1], 66.31995258676761)
     
     def test_dmi(self):
         """DMIの計算をテストする

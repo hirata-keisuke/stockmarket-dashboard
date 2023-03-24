@@ -19,30 +19,24 @@ def download_stock(code, start, end):
     """
 
     try:
-        st = yfinance.download(code, start=start, end=end)
-        with open("../data/codes.csv", "r") as f:
+        save_path = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "data")
+        filename = start.replace("-", "")+"_"+end.replace("-", "")+"_"+code+".csv"
+        save_filepath = os.path.join(save_path, filename)
+        if os.path.isfile(save_filepath):
+            st = pd.read_csv(save_filepath)
+        else:
+            st = yfinance.download(code, start=start, end=end)
+            st.to_csv(save_filepath, encoding="utf-8")
+        with open(os.path.join(save_path, "codes.csv"), "r") as f:
             for line in f.readlines():
                 line = line.split(",")
                 if line[0] == code:
+                    st.code = line[0]
                     st.name = line[1]
                     break
         return st
     except:
         return None
-
-def save_stock(st):
-    """株式情報を保存する
-
-    args:
-        st (pandas.DataFrame):株式情報
-    """
-    _save_path = os.path.join(os.path.dirname(__file__), os.pardir, "data")
-    _start = st.index[0].strftime("%Y%m%d")
-    _end = st.index[-1].strftime("%Y%m%d")
-    st.to_csv(
-        os.path.join(_save_path, _start+"_"+_end+"_"+st.code+".csv"),
-        encoding="utf8"
-    )
 
 def _prepare_codes():
     """日本株と米国株のコードをCSVファイルに用意する

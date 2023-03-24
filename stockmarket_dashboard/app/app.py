@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, State
 
 from callback.download import download_stock
-from callback.technicals import calc_sma, calc_sigma, calc_dmi
+from callback.visualize import drow_candle_sma, draw_candle_bollinger, draw_candle_dmi
 
 def set_codes():
     """ドロップダウンにコードを表示する
@@ -47,18 +47,29 @@ app.layout = html.Div([
         html.Div([
             html.H5("移動平均線"),
             dcc.Graph(id="candle-sma"),
-            html.Div(["短期:",dcc.Input(id="sma-short", value=5, style={"width":"40px"})]),
-            html.Div(["中期:",dcc.Input(id="sma-midium", value=20, style={"width":"40px"})]),
-            html.Div(["長期:",dcc.Input(id="sma-long", value=60, style={"width":"40px"})]),
+            html.Div(["短期:",
+                      dcc.Input(id="sma-short", value=5, type="number", style={"width":"40px"}, debounce=True)],
+                      style={"text-align":"center"}),
+            html.Div(["中期:",
+                      dcc.Input(id="sma-medium", value=20, type="number", style={"width":"40px"}, debounce=True)],
+                      style={"text-align":"center"}),
+            html.Div(["長期:",
+                      dcc.Input(id="sma-long", value=60, type="number", style={"width":"40px"}, debounce=True)],
+                      style={"text-align":"center"}),
         ], style={"width":"33%"}),html.Div([
             html.H5("ボリンジャーバンド"),
             dcc.Graph(id="candle-bollinger"),
-            html.Div(["標準偏差の計算範囲:",dcc.Input(id="bollinger-range", value=20, style={"width":"20px"})])
+            html.Div(["標準偏差の計算範囲:",
+                      dcc.Input(id="bollinger-range", value=20, type="number", style={"width":"30px"}, debounce=True)],
+                      style={"text-align":"center"})
         ], style={"width":"33%"}),
         html.Div([
             html.H5("DMI"),
             dcc.Graph(id="candle-dmi"),
-            html.Div(["DMIの計算範囲:",dcc.Input(id="dmi-range", value=10, style={"width":"20px"})])
+            html.Div(["DMIの計算範囲:",
+                      dcc.Input(id="dmi-range", value=10, type="number", style={"width":"30px"}, debounce=True)],
+                      style={"text-align":"center"}
+                      )
         ], style={"width":"33%"}),
     ], className="technicals")
 ])
@@ -70,32 +81,40 @@ app.layout = html.Div([
         Output("candle-sma", "figure"), Output("candle-bollinger", "figure"),
         Output("candle-dmi", "figure"),
     ],
-    inputs=[Input("query-submit-button", "n_clicks")],
+    inputs=[
+        Input("query-submit-button", "n_clicks"),
+        Input("sma-short", "value"), Input("sma-medium", "value"), Input("sma-long", "value"),
+        Input("bollinger-range", "value"), Input("dmi-range", "value")
+    ],
     state=[
         State("period", "start_date"), State("period", "end_date"),
         State("stock-code-dropdown", "value")
     ]
 )
-def visualize_technicals(n_clicks, start_date, end_date, code):
+def visualize_technicals(
+    query_submit, sma_short, sma_medium, sma_long, n_sigma, n_dmi, start_date, end_date, code
+):
     """選択された証券コード・期間でテクニカルを表示する
     """
-    if n_clicks == 0:
+
+    if start_date is None or end_date is None or code is None:
         return "銘柄名", "株価", "出来高", go.Figure(), go.Figure(), go.Figure()
-    
+
     st = download_stock(code, start_date, end_date)
 
     if st is None:
         return None, None, None, go.Figure(), go.Figure(), go.Figure()
+
+    excluded_dates = [
+        d.strftime("%Y-%m-%d") 
+        for d in pd.date_range(start=st.index[0], end=st.index[-1]) 
+        if d not in st.index
+    ]
+    candle_sma = drow_candle_sma(st, excluded_dates, sma_short, sma_medium, sma_long)
     
-    candle_sma = go.Figure(go.Candlestick(
-        x=st.index, open=st["Open"], high=st["High"], low=st["Low"], close=st["Close"]
-    ))
-    candle_bollinger = go.Figure(go.Candlestick(
-        x=st.index, open=st["Open"], high=st["High"], low=st["Low"], close=st["Close"]
-    ))
-    candle_dmi = go.Figure(go.Candlestick(
-        x=st.index, open=st["Open"], high=st["High"], low=st["Low"], close=st["Close"]
-    ))
+    candle_bollinger = draw_candle_bollinger(st, excluded_dates, n_sigma)
+
+    candle_dmi = draw_candle_dmi(st, excluded_dates, n_dmi)
 
     _recent = st.loc[st.index[-1]]
     return st.name, f'{_recent["Close"]:.1f}円', f'{_recent["Volume"]:.0f}株', candle_sma, candle_bollinger, candle_dmi
