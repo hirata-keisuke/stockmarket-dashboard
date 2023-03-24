@@ -29,6 +29,10 @@
     font-size: 15px;
 }
 
+.stock-code-dropdown {
+    font-size: 10px;
+}
+
 .technicals {
     float: left;
     display: flex;
