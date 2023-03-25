@@ -6,9 +6,14 @@
 
 ## 開発環境
 
-Dockerイメージ「python:3.8-slim」上で開発しました。
+Dockerイメージ「python:3.8-slim」上で開発した。
 
 ## 使い方
+
+1. dev-containerの設定かrequirements.txtに従って必要なパッケージをインストールする
+2. ```python app.py```でアプリケーションを起動する
+3. ブラウザで```localhost:8050```を開く
+4. 取得期間と証券コードを決めて送信する
 
 ## 機能
 
