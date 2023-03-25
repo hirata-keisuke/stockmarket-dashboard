@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output, State
 
 from callback.download import download_stock
-from callback.visualize import drow_candle_sma, draw_candle_bollinger, draw_candle_dmi
+from callback.visualize import drow_technicals
 
 def set_codes():
     """ドロップダウンにコードを表示する
@@ -55,24 +55,14 @@ app.layout = html.Div([
         ], style={"margin":"3px"})], className="technicals-settings")
     ], className="search-area"),
     html.Div([
-        html.Div([
-            dcc.Graph(id="candle-sma"),
-        ], style={"width":"33%"}),
-        html.Div([
-            dcc.Graph(id="candle-bollinger"),
-        ], style={"width":"33%"}),
-        html.Div([
-            dcc.Graph(id="candle-dmi"),
-        ], style={"width":"33%"}),
+        dcc.Graph(id="technicals"),
     ], className="technicals-graphs")
 ])
 
 @app.callback(
     output=[
         Output("stock-name", "children"), Output("stock-price", "children"), 
-        Output("stock-volume", "children"),
-        Output("candle-sma", "figure"), Output("candle-bollinger", "figure"),
-        Output("candle-dmi", "figure"),
+        Output("stock-volume", "children"), Output("technicals", "figure")
     ],
     inputs=[
         Input("query-submit-button", "n_clicks"),
@@ -91,26 +81,22 @@ def visualize_technicals(
     """
 
     if start_date is None or end_date is None or code is None:
-        return "銘柄名", "株価", "出来高", go.Figure(), go.Figure(), go.Figure()
+        return "銘柄名", "株価", "出来高", go.Figure()
 
     st = download_stock(code, start_date, end_date)
 
     if st is None:
         return None, None, None, go.Figure(), go.Figure(), go.Figure()
 
-    excluded_dates = [
-        d.strftime("%Y-%m-%d") 
-        for d in pd.date_range(start=st.index[0], end=st.index[-1]) 
-        if d not in st.index
-    ]
-    candle_sma = drow_candle_sma(st, excluded_dates, sma_short, sma_medium, sma_long)
-    
-    candle_bollinger = draw_candle_bollinger(st, excluded_dates, n_sigma)
-
-    candle_dmi = draw_candle_dmi(st, excluded_dates, n_dmi)
+    included_dates = {d.strftime("%Y-%m-%d") for d in st.index}
+    all_dates = {d.strftime("%Y-%m-%d") for d in pd.date_range(start=st.index[0], end=st.index[-1])}
+    excluded_dates = all_dates - included_dates
+    visualized_technicals = drow_technicals(
+        st, excluded_dates, sma_short, sma_medium, sma_long, n_sigma, n_dmi
+    )
 
     _recent = st.loc[st.index[-1]]
-    return st.name, f'{_recent["Close"]:.1f}円', f'{_recent["Volume"]:.0f}株', candle_sma, candle_bollinger, candle_dmi
+    return st.name, f'{_recent["Close"]:.1f}円', f'{_recent["Volume"]:.0f}株', visualized_technicals
 
 if __name__ == "__main__":
     app.run_server(debug=True)

@@ -23,9 +23,11 @@ def download_stock(code, start, end):
         filename = start.replace("-", "")+"_"+end.replace("-", "")+"_"+code+".csv"
         save_filepath = os.path.join(save_path, filename)
         if os.path.isfile(save_filepath):
-            st = pd.read_csv(save_filepath)
+            st = pd.read_csv(save_filepath, index_col=0)
+            st.index = pd.to_datetime(st.index)
         else:
             st = yfinance.download(code, start=start, end=end)
+            st.index = st.index.tz_convert("Asia/Tokyo")
             st.to_csv(save_filepath, encoding="utf-8")
         with open(os.path.join(save_path, "codes.csv"), "r") as f:
             for line in f.readlines():
