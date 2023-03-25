@@ -41,37 +41,30 @@ app.layout = html.Div([
         dcc.Dropdown(options=set_codes(), id="stock-code-dropdown", className="stock-code-dropdown"),
         html.Div([
             html.Button("クエリを送信", id="query-submit-button", className="query-submit-button", n_clicks=0)
-        ], style={"text-align":"center"})
+        ], style={"text-align":"center"}),
+        html.Div([html.Div([
+            html.H5("移動平均線"),
+            html.Div(["短期:",dcc.Input(id="sma-short", value=5, type="number", style={"width":"40px"}, debounce=True)],style={"text-align":"center"}),
+            html.Div(["中期:",dcc.Input(id="sma-medium", value=20, type="number", style={"width":"40px"}, debounce=True)],style={"text-align":"center"}),
+            html.Div(["長期:",dcc.Input(id="sma-long", value=60, type="number", style={"width":"40px"}, debounce=True)],style={"text-align":"center"})
+        ], style={"margin":"3px"}),html.Div([
+            html.H5("ボリンジャーバンド"),
+            html.Div(["σの範囲:",dcc.Input(id="bollinger-range", value=20, type="number", style={"width":"30px"}, debounce=True)],style={"text-align":"center"}),
+            html.H5("DMI"),
+            html.Div(["範囲:",dcc.Input(id="dmi-range", value=10, type="number", style={"width":"30px"}, debounce=True)], style={"text-align":"center"})
+        ], style={"margin":"3px"})], className="technicals-settings")
     ], className="search-area"),
     html.Div([
         html.Div([
-            html.H5("移動平均線"),
             dcc.Graph(id="candle-sma"),
-            html.Div(["短期:",
-                      dcc.Input(id="sma-short", value=5, type="number", style={"width":"40px"}, debounce=True)],
-                      style={"text-align":"center"}),
-            html.Div(["中期:",
-                      dcc.Input(id="sma-medium", value=20, type="number", style={"width":"40px"}, debounce=True)],
-                      style={"text-align":"center"}),
-            html.Div(["長期:",
-                      dcc.Input(id="sma-long", value=60, type="number", style={"width":"40px"}, debounce=True)],
-                      style={"text-align":"center"}),
-        ], style={"width":"33%"}),html.Div([
-            html.H5("ボリンジャーバンド"),
-            dcc.Graph(id="candle-bollinger"),
-            html.Div(["標準偏差の計算範囲:",
-                      dcc.Input(id="bollinger-range", value=20, type="number", style={"width":"30px"}, debounce=True)],
-                      style={"text-align":"center"})
         ], style={"width":"33%"}),
         html.Div([
-            html.H5("DMI"),
-            dcc.Graph(id="candle-dmi"),
-            html.Div(["DMIの計算範囲:",
-                      dcc.Input(id="dmi-range", value=10, type="number", style={"width":"30px"}, debounce=True)],
-                      style={"text-align":"center"}
-                      )
+            dcc.Graph(id="candle-bollinger"),
         ], style={"width":"33%"}),
-    ], className="technicals")
+        html.Div([
+            dcc.Graph(id="candle-dmi"),
+        ], style={"width":"33%"}),
+    ], className="technicals-graphs")
 ])
 
 @app.callback(
