@@ -15,14 +15,14 @@
     font-size: 20px;
 }
 
-.search-area {
+.setting-area {
     float: right;
     display: flex;
     flex-direction: column;
     width: 30%;
 }
 
-.query-submit-button {
+.submit-button {
     margin: 20px;
     width: 120px; 
     height: 40px;
@@ -44,4 +44,14 @@
 .technicals-settings {
     display: flex;
     flex-direction: row;
+}
+
+.filter-area{
+    border: solid;
+    margin: 5px;
+}
+
+.visualize-area{
+    border: solid;
+    margin: 5px;
 }
