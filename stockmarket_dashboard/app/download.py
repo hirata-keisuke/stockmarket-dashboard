@@ -1,6 +1,6 @@
 import yfinance
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
     
 if __name__ == "__main__":
     import argparse
@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     cur.execute("SELECT * FROM code_master")
     codes = [row[0] for row in cur.fetchall()]
-    latest_date = None
+    start_date = None
     today = date.today()
     for code in codes:
         print(code)
@@ -34,15 +34,15 @@ if __name__ == "__main__":
                                 (code, bus_date, open_price, high_price, low_price, close_price, volume))
             finally:    
                 conn.commit()
-        elif args["type"] == "diff":
-            if latest_date is None:
+        elif args.type == "diff":
+            if start_date is None:
                 cur.execute(f"SELECT date FROM stock_data WHERE code='{codes[0]}'")
                 dates = [row[0] for row in cur.fetchall()]
-                latest_date = dates[-1]
+                start_date = dates[-1] + timedelta(days=1)
             try:
-                stock_data = yfinance.download(code, start=latest_date, end=today)
+                stock_data = yfinance.download(code, start=start_date, end=today)
             except:
-                print(f"{code} does not have data between {latest_date} and {today}.")
+                print(f"{code} does not have data between {start_date} and {today}.")
             else:
                 for index, row in stock_data.iterrows():
                     bus_date = index.to_pydatetime().date()
